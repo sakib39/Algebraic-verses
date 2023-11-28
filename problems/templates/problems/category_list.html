@@ -1,0 +1,40 @@
+{% extends "base.html" %} {% load static %} {% block content %}
+<style>
+  .category-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; /* Adjust the space between the cards */
+    justify-content: center; /* Center cards in the container */
+  }
+
+  .category-card {
+    text-decoration: none; /* Remove underline from links */
+    color: inherit; /* Keep text color consistent */
+  }
+
+  .card {
+    cursor: pointer;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    background-color: white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+</style>
+<div class="category-cards">
+  {% for category in categories %}
+  <a href="{% url 'problem_list' category.id %}" class="category-card">
+    <div class="card">
+      <h3>{{ category.name }}</h3>
+    </div>
+  </a>
+  {% endfor %}
+</div>
+{% endblock %}

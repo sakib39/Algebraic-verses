@@ -1,0 +1,273 @@
+<!-- Add this inside the <head> tag of your HTML template -->
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"
+  onload="window.mathjaxReady = true;"
+></script>
+<style>
+  .messages {
+    list-style-type: none;
+    padding: 0;
+  }
+
+  .messages li.success {
+    color: green;
+  }
+
+  .messages li.warning {
+    color: orange;
+  }
+
+  .messages li.error {
+    color: red;
+  }
+  #card-container {
+    display: flex;
+    overflow: hidden;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%; /* Adjust as needed */
+    scroll-behavior: smooth;
+  }
+
+  .card {
+    min-width: 300px; /* Adjust as needed */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    margin: 10px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 5px;
+    position: relative;
+  }
+
+  .problem-content {
+    text-align: center;
+  }
+
+  .problem-actions button {
+    margin: 5px;
+    padding: 10px 20px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+
+  .problem-actions button:hover {
+    background-color: #0056b3;
+  }
+
+  .navigation {
+    text-align: center;
+    margin-top: 20px;
+  }
+
+  .navigation button {
+    padding: 10px 20px;
+    border: none;
+    background-color: #ddd;
+    cursor: pointer;
+    margin: 0 10px;
+  }
+
+  .navigation button:hover {
+    background-color: #ccc;
+  }
+</style>
+
+{% extends "base.html" %} {% block content %} {% if messages %}
+<ul class="messages">
+  {% for message in messages %}
+  <li class="{{ message.tags }}">{{ message }}</li>
+  {% endfor %}
+</ul>
+{% endif %}
+<h2>Problems in {{ category.name }}</h2>
+<div id="card-container">
+  {% for problem in problems %}
+  <div class="card" id="card-{{ problem.id }}">
+    <div class="problem-content">
+      <p class="problem-statement">{{ problem.statement }}</p>
+      <div class="problem-actions">
+        <button onclick="submitAnswer({{ problem.id }}, 'True')">True</button>
+        <button onclick="submitAnswer({{ problem.id }}, 'False')">False</button>
+      </div>
+      <p class="message" id="message-{{ problem.id }}"></p>
+      <p
+        class="solution"
+        id="solution-{{ problem.id }}"
+        style="display: none"
+      ></p>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+<div class="navigation">
+  <button onclick="navigate('prev')">&#9664;</button>
+  <button onclick="navigate('next')">&#9654;</button>
+</div>
+
+{% comment %}
+<script>
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === name + "=") {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+</script>
+
+<script>
+  function submitAnswer(problemId, userAnswer) {
+    const csrftoken = getCookie("csrftoken");
+    fetch(`/problems/${problemId}/answer/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": csrftoken,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ answer: userAnswer }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        const messageElement = document.getElementById("message-" + problemId);
+        const solutionElement = document.getElementById(
+          "solution-" + problemId
+        );
+
+        // Clear previous content from both elements
+        messageElement.textContent = "";
+        solutionElement.innerHTML = "";
+
+        if (data.show_solution) {
+          // Display the solution in the 'solution' element
+          solutionElement.innerHTML = data.solution;
+          solutionElement.style.display = "block";
+          messageElement.style.display = "none"; // Hide the 'message' element
+
+          // Re-typeset with MathJax
+          if (window.MathJax) {
+            MathJax.typesetPromise([solutionElement]);
+          }
+        } else {
+          // Display the message in the 'message' element
+          messageElement.textContent = data.message;
+          messageElement.style.display = "block";
+          solutionElement.style.display = "none"; // Hide the 'solution' element
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }
+
+  let currentCard = 0;
+  const cards = document.querySelectorAll(".card");
+
+  function showCard(index) {
+    // Hide all cards
+    cards.forEach((card) => (card.style.display = "none"));
+    // Show the target card
+    cards[index].style.display = "block";
+  }
+
+  function navigate(direction) {
+    if (direction === "next" && currentCard < cards.length - 1) {
+      currentCard++;
+    } else if (direction === "prev" && currentCard > 0) {
+      currentCard--;
+    }
+    showCard(currentCard);
+  }
+
+  // Initially show the first card
+  showCard(currentCard);
+</script>
+{% endcomment %}
+
+<script>
+  // Function to retrieve CSRF token
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== "") {
+      const cookies = document.cookie.split(";");
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === name + "=") {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+
+  // Function to submit the user's answer and handle the response
+  function submitAnswer(problemId, userAnswer) {
+    const csrftoken = getCookie("csrftoken");
+    fetch(`/problems/${problemId}/answer/`, {
+      method: "POST",
+      headers: {
+        "X-CSRFToken": csrftoken,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ answer: userAnswer }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        const messageElement = document.getElementById(`message-${problemId}`);
+        const solutionElement = document.getElementById(
+          `solution-${problemId}`
+        );
+        messageElement.textContent = data.message;
+        if (data.show_solution) {
+          solutionElement.innerHTML = `\\[${data.solution}\\]`; // Wrap in LaTeX delimiters for display math
+          solutionElement.style.display = "block";
+          if (window.MathJax) {
+            MathJax.typesetPromise([solutionElement]);
+          }
+        } else {
+          solutionElement.style.display = "none";
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error);
+      });
+  }
+
+  let currentCard = 0;
+  const cards = document.querySelectorAll(".card");
+
+  function showCard(index) {
+    // Hide all cards
+    cards.forEach((card) => (card.style.display = "none"));
+    // Show the target card
+    cards[index].style.display = "block";
+  }
+
+  function navigate(direction) {
+    if (direction === "next" && currentCard < cards.length - 1) {
+      currentCard++;
+    } else if (direction === "prev" && currentCard > 0) {
+      currentCard--;
+    }
+    showCard(currentCard);
+  }
+
+  // Initially show the first card
+  showCard(currentCard);
+</script>
+{% endblock %}
